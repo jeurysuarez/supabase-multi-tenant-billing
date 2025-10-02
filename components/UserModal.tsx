@@ -1,8 +1,7 @@
-
-import React, { useState, useEffect, FormEvent } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabase';
-import { Usuario, UserRole } from '../types';
 import { useAuth } from '../hooks/useAuth';
+import { Usuario, UserRole } from '../types';
 import Spinner from './Spinner';
 
 interface UserModalProps {
@@ -24,81 +23,60 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
     const isEditing = !!user;
 
     useEffect(() => {
-        // Reset state on user or isOpen change
-        if (isOpen) {
-            if (user) {
-                setNombre(user.nombre);
-                setEmail(user.email);
-                setRol(user.rol);
-                setPassword(''); // Clear password field for editing
-            } else {
-                // Reset form for new user
-                setNombre('');
-                setEmail('');
-                setPassword('');
-                setRol('empleado');
-            }
-            setError(null); // Clear previous errors when modal opens
+        if (user) {
+            setNombre(user.nombre);
+            setEmail(user.email);
+            setRol(user.rol);
+        } else {
+            // Reset form for new user
+            setNombre('');
+            setEmail('');
+            setPassword('');
+            setRol('empleado');
         }
+        // Clear error when modal is opened or user changes
+        setError(null);
     }, [user, isOpen]);
 
-    if (!isOpen) {
-        return null;
-    }
-
-    const handleSubmit = async (e: FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
 
-        if (!profile?.empresa_id) {
-            setError("No se pudo identificar la empresa del administrador.");
-            setLoading(false);
-            return;
-        }
-
-        try {
-            if (isEditing && user) {
-                // In a real application, you might want to allow updating more fields.
-                // For simplicity, we only update name and role here.
-                // Email is the identifier and should not be changed.
-                // Password changes should have a dedicated, secure flow.
-                const { error: updateError } = await supabase
-                    .from('usuarios')
-                    .update({
-                        nombre,
-                        rol,
-                    })
-                    .eq('id', user.id);
-                
-                if (updateError) throw updateError;
-
+        if (isEditing) {
+            // Update user logic
+            const { error: updateError } = await supabase
+                .from('usuarios')
+                .update({ nombre, rol })
+                .eq('id', user.id);
+            
+            if (updateError) {
+                setError(updateError.message);
             } else {
-                // Create new user in Supabase Auth.
-                // This will typically send a confirmation email.
-                const { data: authData, error: authError } = await supabase.auth.signUp({
-                    email,
-                    password,
-                    options: {
-                        // We can pass additional data to be used in a trigger
-                        // to populate the public users table automatically.
-                        // This is a more robust approach.
-                        data: {
-                            nombre: nombre,
-                            rol: rol,
-                            empresa_id: profile.empresa_id
-                        }
-                    }
-                });
-                
-                if (authError) throw authError;
+                onSave();
+            }
 
-                // If you don't use a trigger, you would insert into the public table here.
-                // However, this can be racy if email confirmation is on.
-                // The trigger approach is better. For this example, we assume no trigger
-                // and add a record to the usuarios table.
-                if (!authData.user) throw new Error("No se pudo crear el usuario.");
+        } else {
+            // Create user logic
+            if (!profile?.empresa_id) {
+                setError("No se puede crear un usuario sin una empresa asociada.");
+                setLoading(false);
+                return;
+            }
 
+            // Step 1: Create the user in auth.users
+            // We assume email verification is enabled, so this won't log the admin out.
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+            });
+
+            if (authError) {
+                setError(authError.message);
+            } else if (authData.user) {
+                // Step 2: Create the user profile in the public.usuarios table
+                // WARNING: If this step fails, an orphaned user will be left in auth.users.
+                // A robust solution would use an Edge Function to perform these steps atomically.
                 const { error: profileError } = await supabase.from('usuarios').insert({
                     id: authData.user.id,
                     nombre,
@@ -106,112 +84,105 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
                     rol,
                     empresa_id: profile.empresa_id,
                 });
-                
+
                 if (profileError) {
-                    // This is a problematic state: an auth user exists without a profile.
-                    // This requires manual cleanup or a backend function.
-                    // We'll notify the admin.
-                    console.error("Auth user created, but profile creation failed:", profileError);
-                    throw new Error(`Se creó el usuario de autenticación, pero no su perfil: ${profileError.message}. Contacte a soporte.`);
+                    setError(profileError.message);
+                    // Here you would ideally delete the orphaned auth user,
+                    // but that requires admin privileges not available on the client.
+                    // e.g., await supabase.auth.admin.deleteUser(authData.user.id)
+                } else {
+                    onSave();
                 }
+            } else {
+                 setError("No se pudo crear el usuario. El objeto de usuario no fue devuelto.");
             }
-            onSave();
-        } catch (err: any) {
-            setError(err.message || "Ocurrió un error inesperado.");
-        } finally {
-            setLoading(false);
         }
+        setLoading(false);
     };
 
+    if (!isOpen) {
+        return null;
+    }
+
     return (
-        <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center"
-            // `onMouseDown` is used to prevent closing when clicking inside the modal content
-            onMouseDown={onClose}
-        >
-            <div 
-                className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md m-4"
-                onMouseDown={e => e.stopPropagation()}
-            >
-                <h3 className="text-xl font-semibold text-white mb-4">
-                    {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
-                </h3>
-
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4" aria-modal="true" role="dialog">
+            <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
                 <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="nombre">
-                            Nombre Completo
-                        </label>
-                        <input
-                            id="nombre"
-                            className="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 border-gray-600 text-white leading-tight focus:outline-none focus:shadow-outline"
-                            type="text"
-                            value={nombre}
-                            onChange={(e) => setNombre(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="email">
-                            Correo Electrónico
-                        </label>
-                        <input
-                            id="email"
-                            className="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 border-gray-600 text-white leading-tight focus:outline-none focus:shadow-outline"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            disabled={isEditing} // Cannot change email
-                        />
-                    </div>
-                    {!isEditing && (
-                        <div className="mb-4">
-                            <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="password">
-                                Contraseña
-                            </label>
-                            <input
-                                id="password"
-                                className="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 border-gray-600 text-white mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                                type="password"
-                                placeholder="******************"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required={!isEditing}
-                            />
+                    <div className="p-6">
+                        <h2 className="text-xl font-bold text-white mb-4">{isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}</h2>
+                        
+                        {error && <p className="bg-red-900 text-red-200 p-3 rounded-md mb-4 text-sm">{error}</p>}
+
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="nombre" className="block text-sm font-medium text-gray-300">Nombre</label>
+                                <input
+                                    id="nombre"
+                                    type="text"
+                                    value={nombre}
+                                    onChange={(e) => setNombre(e.target.value)}
+                                    required
+                                    className="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    disabled={isEditing}
+                                    className="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                                />
+                            </div>
+                            {!isEditing && (
+                                <div>
+                                    <label htmlFor="password" className="block text-sm font-medium text-gray-300">Contraseña</label>
+                                    <input
+                                        id="password"
+                                        type="password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                        minLength={6}
+                                        className="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                        placeholder="Mínimo 6 caracteres"
+                                    />
+                                </div>
+                            )}
+                            <div>
+                                <label htmlFor="rol" className="block text-sm font-medium text-gray-300">Rol</label>
+                                <select
+                                    id="rol"
+                                    value={rol}
+                                    onChange={(e) => setRol(e.target.value as UserRole)}
+                                    required
+                                    className="mt-1 block w-full bg-gray-900 border border-gray-700 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                >
+                                    <option value="empleado">Empleado</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                            </div>
                         </div>
-                    )}
-                    <div className="mb-6">
-                        <label className="block text-gray-400 text-sm font-bold mb-2" htmlFor="rol">
-                            Rol
-                        </label>
-                        <select
-                            id="rol"
-                            className="shadow appearance-none border rounded w-full py-2 px-3 bg-gray-700 border-gray-600 text-white leading-tight focus:outline-none focus:shadow-outline"
-                            value={rol}
-                            onChange={(e) => setRol(e.target.value as UserRole)}
-                        >
-                            <option value="empleado">Empleado</option>
-                            <option value="admin">Administrador</option>
-                        </select>
                     </div>
 
-                    {error && <p className="text-red-500 text-xs italic mb-4">{error}</p>}
-                    
-                    <div className="flex items-center justify-end space-x-4">
-                        <button
+                    <div className="bg-gray-900 px-6 py-4 flex justify-end items-center space-x-3 rounded-b-lg">
+                         <button
                             type="button"
                             onClick={onClose}
-                            className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                            disabled={loading}
+                            className="px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-500 focus:outline-none focus:border-gray-700 focus:ring ring-gray-300 disabled:opacity-50 transition ease-in-out duration-150"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-28 flex items-center justify-center disabled:bg-primary-800"
+                            className="inline-flex justify-center items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-700 active:bg-primary-900 focus:outline-none focus:border-primary-900 focus:ring ring-primary-300 disabled:opacity-50 transition ease-in-out duration-150"
                         >
-                           {loading ? <Spinner /> : isEditing ? 'Guardar' : 'Crear'}
+                            {loading ? <Spinner /> : 'Guardar'}
                         </button>
                     </div>
                 </form>
