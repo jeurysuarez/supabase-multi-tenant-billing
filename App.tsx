@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { HashRouter, Routes, Route } from 'react-router-dom';
 
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -20,7 +20,7 @@ import NotFoundPage from './pages/NotFoundPage';
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
 
@@ -44,7 +44,7 @@ function App() {
           {/* Fallback route */}
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </AuthProvider>
   );
 }
