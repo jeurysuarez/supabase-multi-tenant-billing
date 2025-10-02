@@ -1,5 +1,4 @@
 {
   "name": "Supabase Facturación Multi-Tenant",
-  "description": "Una aplicación de facturación multi-tenant (multi-empresa) construida con React y Supabase. Cuenta con control de acceso basado en roles, aislamiento de datos por empresa y gestión de clientes, productos y facturas.",
-  "requestFramePermissions": []
+  "description": "Una aplicación de facturación multi-tenant (multi-empresa) construida con React y Supabase. Cuenta con control de acceso basado en roles, aislamiento de datos por empresa y gestión de clientes, productos y facturas."
 }

@@ -1,64 +1,51 @@
+
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
-// FIX: Consolidate useAuth hook usage to the one in `hooks/useAuth.ts`.
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import { useAuth } from './hooks/useAuth';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
+// Pages
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
-import UsersPage from './pages/UsersPage';
 import ClientsPage from './pages/ClientsPage';
 import ProductsPage from './pages/ProductsPage';
+import UsersPage from './pages/UsersPage';
 import InvoicesPage from './pages/InvoicesPage';
 import CreateInvoicePage from './pages/CreateInvoicePage';
 import InvoiceDetailPage from './pages/InvoiceDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
-import { UserRole } from './types';
-
-
-const AppRoutes: React.FC = () => {
-  const { session, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-900">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary-500"></div>
-      </div>
-    );
-  }
-
-  return (
-    <Routes>
-      <Route path="/auth" element={!session ? <AuthPage /> : <Navigate to="/" />} />
-      
-      <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="clients" element={<ClientsPage />} />
-          <Route path="products" element={<ProductsPage />} />
-          <Route path="invoices" element={<InvoicesPage />} />
-          <Route path="invoices/new" element={<CreateInvoicePage />} />
-          <Route path="invoices/:id" element={<InvoiceDetailPage />} />
-          <Route element={<ProtectedRoute allowedRoles={[UserRole.ADMIN]} />}>
-            <Route path="users" element={<UsersPage />} />
-          </Route>
-        </Route>
-      </Route>
-
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
-  );
-}
-
 
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <HashRouter>
-        <AppRoutes />
-      </HashRouter>
+      <Router>
+        <Routes>
+          <Route path="/auth" element={<AuthPage />} />
+          
+          <Route path="/" element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="clientes" element={<ClientsPage />} />
+              <Route path="productos" element={<ProductsPage />} />
+              <Route path="facturas" element={<InvoicesPage />} />
+              <Route path="facturas/crear" element={<CreateInvoicePage />} />
+              <Route path="facturas/:id" element={<InvoiceDetailPage />} />
+              
+              <Route path="usuarios" element={<ProtectedRoute allowedRoles={['admin']} />}>
+                <Route index element={<UsersPage />} />
+              </Route>
+              
+              {/* This will render the dashboard for any other authenticated route. 
+                  A better approach might be to navigate to a 404 page within the layout. */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Route>
+          
+          {/* A general 404 for routes that don't match anything */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Router>
     </AuthProvider>
   );
 };

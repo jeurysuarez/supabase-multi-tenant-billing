@@ -1,79 +1,45 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { supabase } from '../services/supabase';
-import { UsersIcon, ArchiveBoxIcon, DocumentTextIcon, BuildingOffice2Icon } from '@heroicons/react/24/outline';
-
-const StatCard: React.FC<{ title: string; value: number | string; icon: React.ReactNode }> = ({ title, value, icon }) => (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-lg flex items-center">
-        <div className="p-3 rounded-full bg-primary-500/20 text-primary-400 mr-4">
-            {icon}
-        </div>
-        <div>
-            <p className="text-sm font-medium text-gray-400">{title}</p>
-            <p className="text-3xl font-bold text-white">{value}</p>
-        </div>
-    </div>
-);
-
+import { ChartBarIcon, CurrencyDollarIcon, DocumentTextIcon, UsersIcon } from '@heroicons/react/24/outline';
 
 const Dashboard: React.FC = () => {
   const { profile } = useAuth();
-  const [stats, setStats] = useState({ clients: 0, products: 0, invoices: 0 });
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      if (!profile) return;
-
-      setLoading(true);
-
-      const [
-        { count: clientCount },
-        { count: productCount },
-        { count: invoiceCount }
-      ] = await Promise.all([
-        supabase.from('clientes').select('*', { count: 'exact', head: true }).eq('empresa_id', profile.empresa_id),
-        supabase.from('productos').select('*', { count: 'exact', head: true }).eq('empresa_id', profile.empresa_id),
-        supabase.from('facturas').select('*', { count: 'exact', head: true }).eq('empresa_id', profile.empresa_id)
-      ]);
-      
-      setStats({
-        clients: clientCount ?? 0,
-        products: productCount ?? 0,
-        invoices: invoiceCount ?? 0,
-      });
-
-      setLoading(false);
-    };
-
-    fetchStats();
-  }, [profile]);
+  const stats = [
+    { name: 'Ingresos Totales (Mes)', value: '$0', icon: CurrencyDollarIcon },
+    { name: 'Facturas Emitidas (Mes)', value: '0', icon: DocumentTextIcon },
+    { name: 'Clientes Nuevos (Mes)', value: '0', icon: UsersIcon },
+    { name: 'Tasa de Pago', value: '0%', icon: ChartBarIcon },
+  ];
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-white mb-6">¡Bienvenido, {profile?.nombre}!</h1>
+      <h1 className="text-3xl font-bold text-white mb-6">
+        Bienvenido, {profile?.nombre}
+      </h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Total de Clientes" value={loading ? '...' : stats.clients} icon={<UsersIcon className="h-8 w-8" />} />
-        <StatCard title="Total de Productos" value={loading ? '...' : stats.products} icon={<ArchiveBoxIcon className="h-8 w-8" />} />
-        <StatCard title="Total de Facturas" value={loading ? '...' : stats.invoices} icon={<DocumentTextIcon className="h-8 w-8" />} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat) => (
+          <div key={stat.name} className="bg-gray-800 p-6 rounded-lg shadow-lg flex items-center">
+            <div className="bg-primary-600 p-3 rounded-full mr-4">
+              <stat.icon className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-400">{stat.name}</p>
+              <p className="text-2xl font-semibold text-white">{stat.value}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
-        <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-            <BuildingOffice2Icon className="h-6 w-6 mr-3 text-primary-400" />
-            Información de la Empresa
-        </h2>
-        {profile?.empresa ? (
-            <div className="space-y-3 text-gray-300">
-                <p><span className="font-semibold text-gray-400">Nombre:</span> {profile.empresa.nombre}</p>
-                <p><span className="font-semibold text-gray-400">RNC:</span> {profile.empresa.rnc || 'N/A'}</p>
-                <p><span className="font-semibold text-gray-400">Dirección:</span> {profile.empresa.direccion || 'N/A'}</p>
-                <p><span className="font-semibold text-gray-400">Teléfono:</span> {profile.empresa.telefono || 'N/A'}</p>
-            </div>
-        ) : (
-            <p>Cargando información de la empresa...</p>
-        )}
+      <div className="mt-8">
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+          <h2 className="text-xl font-semibold text-white mb-4">Actividad Reciente</h2>
+          <div className="text-gray-400">
+            No hay actividad reciente para mostrar.
+          </div>
+        </div>
       </div>
     </div>
   );
