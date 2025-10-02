@@ -1,16 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-// IMPORTANTE: En una aplicación real, estos valores deben almacenarse en
-// variables de entorno (p. ej., un archivo .env) y accederse a través de una
-// herramienta de compilación como Vite (import.meta.env.VITE_SUPABASE_URL) o
-// Create React App (process.env.REACT_APP_SUPABASE_URL). Están hardcodeados aquí
-// solo con fines de demostración, lo cual no es seguro para producción.
-const supabaseUrl = process.env.SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+// IMPORTANT: In a real-world application, these values should be stored in
+// environment variables (e.g., .env file) and accessed via a build tool
+// like Vite (import.meta.env.VITE_SUPABASE_URL) or Create React App
+// (process.env.REACT_APP_SUPABASE_URL). They are hardcoded here for
+// demonstration purposes only, which is not secure for production.
+const supabaseUrl = process.env.SUPABASE_URL || 'https://yzvgrrsijnprxraolhgc.supabase.co';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6dmdycnNpam5wcnhyYW9saGdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MDY0NjcsImV4cCI6MjA3NDM4MjQ2N30.2uIY-aiYyjEyppeI1u3H7YvN62eYFLNsO0RSdk6ein4';
 
 
-if (supabaseUrl === 'YOUR_SUPABASE_URL' || supabaseAnonKey === 'YOUR_SUPABASE_ANON_KEY') {
-    console.error("La URL y la Anon Key de Supabase no están configuradas. Por favor, reemplaza 'YOUR_SUPABASE_URL' y 'YOUR_SUPABASE_ANON_KEY' en services/supabase.ts");
+if (supabaseUrl === 'https://yzvgrrsijnprxraolhgc.supabase.co' || supabaseAnonKey === 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6dmdycnNpam5wcnhyYW9saGdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MDY0NjcsImV4cCI6MjA3NDM4MjQ2N30.2uIY-aiYyjEyppeI1u3H7YvN62eYFLNsO0RSdk6ein4') {
+    console.error("Supabase URL and Anon Key are not configured. Please replace 'YOUR_SUPABASE_URL' and 'YOUR_SUPABASE_ANON_KEY' in services/supabase.ts");
 }
 
 
