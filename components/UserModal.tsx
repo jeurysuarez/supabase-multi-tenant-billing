@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect, FormEvent } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { Usuario, UserRole } from '../types';
+import Spinner from './Spinner';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -19,22 +19,24 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  const isEditing = !!user;
+
+  const isEditing = user !== null;
 
   useEffect(() => {
     if (isOpen) {
-      if (user) {
-        setNombre(user.nombre);
-        setEmail(user.email);
-        setRol(user.rol);
-      } else {
-        setNombre('');
-        setEmail('');
-        setRol('empleado');
-        setPassword('');
-      }
-      setError(null);
+        if (user) {
+            setNombre(user.nombre || '');
+            setEmail(user.email || '');
+            setRol(user.rol || 'empleado');
+            setPassword(''); // Clear password on open
+        } else {
+            // Reset form for new user
+            setNombre('');
+            setEmail('');
+            setRol('empleado');
+            setPassword('');
+        }
+        setError(null); // Clear error on open/user change
     }
   }, [user, isOpen]);
 
@@ -43,59 +45,46 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
     setLoading(true);
     setError(null);
 
-    if (!profile?.empresa_id) {
-        setError("No se pudo identificar la empresa del usuario actual.");
-        setLoading(false);
-        return;
-    }
-
-    if (!isEditing && password.length < 6) {
-        setError("La contraseña debe tener al menos 6 caracteres.");
-        setLoading(false);
-        return;
-    }
-
     try {
       if (isEditing && user) {
-        // Edit existing user's profile data
+        // Update user profile in 'usuarios' table
         const { error: updateError } = await supabase
           .from('usuarios')
           .update({ nombre, rol })
           .eq('id', user.id);
-
+        
         if (updateError) throw updateError;
-        // NOTE: Updating email requires special handling (e.g., supabase.auth.updateUser)
-        // and changing passwords should be a separate, secure flow.
-        // This simplified example only updates the 'nombre' and 'rol' fields.
+        
       } else {
-        // Create new user
-        // SECURITY: Creating users should be handled by a secure server-side environment.
-        // The following code assumes you have a Supabase Edge Function named 'create-user'
-        // that handles creating the user in 'auth.users' and then inserting their
-        // profile into 'public.usuarios'.
-        const { data, error: functionError } = await supabase.functions.invoke('create-user', {
-          body: {
-            email,
-            password,
-            nombre,
-            rol,
-            empresa_id: profile.empresa_id,
-          },
+        // Create a new user.
+        if (!password) {
+          throw new Error("La contraseña es obligatoria para nuevos usuarios.");
+        }
+        if (!profile?.empresa_id) {
+          throw new Error("No se pudo determinar la empresa del administrador.");
+        }
+
+        // WARNING: This is a simplified approach for demonstration.
+        // A production-ready implementation should use a Supabase Edge Function
+        // to securely create a user in `auth.users` and their profile in `public.usuarios`.
+        // We are calling a hypothetical RPC function `admin_create_user` here.
+        // You would need to create this function in your Supabase SQL editor.
+        const { error: rpcError } = await supabase.rpc('admin_create_user', {
+            email_input: email,
+            password_input: password,
+            nombre_input: nombre,
+            rol_input: rol,
+            empresa_id_input: profile.empresa_id,
         });
 
-        if (functionError) throw functionError;
-        if (data?.error) {
-            // Check for specific Supabase Auth error for duplicate user
-            if (data.error.message?.includes('User already registered')) {
-                throw new Error('Ya existe un usuario con este correo electrónico.');
-            }
-            throw new Error(data.error.message || 'Error desconocido desde la función.');
+        if (rpcError) {
+            throw new Error(`Error al crear usuario: ${rpcError.message}. Asegúrate de que la función 'admin_create_user' existe y funciona correctamente.`);
         }
       }
-      onSave(); // This will trigger a re-fetch in the parent and close the modal
+      onSave();
     } catch (err: any) {
-      console.error("Error al guardar el usuario:", err);
-      setError(err.message || 'Ocurrió un error al guardar el usuario.');
+      console.error(err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -106,87 +95,90 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex justify-center items-center p-4 transition-opacity">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md transform transition-all" role="dialog" aria-modal="true">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50 transition-opacity"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6 m-4 text-white transform transition-all"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">{isEditing ? 'Editar Usuario' : 'Crear Nuevo Usuario'}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-white text-3xl leading-none">&times;</button>
+        </div>
+        
         <form onSubmit={handleSubmit}>
-          <div className="p-6">
-            <h2 className="text-xl font-bold text-white mb-4">
-              {isEditing ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
-            </h2>
-            {error && <p className="bg-red-900/50 text-red-300 text-sm p-3 rounded-md mb-4">{error}</p>}
-            
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="nombre" className="block text-sm font-medium text-gray-300">Nombre Completo</label>
-                <input 
-                  type="text" 
-                  id="nombre"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300">Correo Electrónico</label>
-                <input 
-                  type="email" 
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-600 disabled:text-gray-400"
-                  required
-                  disabled={isEditing}
-                />
-                 {isEditing && <p className="mt-1 text-xs text-gray-500">El correo electrónico no se puede cambiar.</p>}
-              </div>
-              {!isEditing && (
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-300">Contraseña</label>
-                  <input 
-                    type="password" 
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    required
-                    placeholder="Mínimo 6 caracteres"
-                    minLength={6}
-                  />
-                </div>
-              )}
-              <div>
-                <label htmlFor="rol" className="block text-sm font-medium text-gray-300">Rol</label>
-                <select
-                  id="rol"
-                  value={rol}
-                  onChange={(e) => setRol(e.target.value as UserRole)}
-                  className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                >
-                  <option value="empleado">Empleado</option>
-                  <option value="admin">Administrador</option>
-                </select>
-              </div>
-            </div>
-          </div>
+          {error && <p className="bg-red-900/50 text-red-300 p-3 rounded-md mb-4 text-sm">{error}</p>}
           
-          <div className="bg-gray-900/50 px-6 py-4 flex justify-end items-center space-x-3 rounded-b-lg">
+          <div className="mb-4">
+            <label htmlFor="nombre" className="block text-sm font-medium text-gray-300 mb-1">Nombre Completo</label>
+            <input
+              type="text"
+              id="nombre"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              required
+              className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">Email</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isEditing}
+              className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          {!isEditing && (
+            <div className="mb-4">
+              <label htmlFor="password"className="block text-sm font-medium text-gray-300 mb-1">Contraseña</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required={!isEditing}
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+          )}
+
+          <div className="mb-6">
+            <label htmlFor="rol" className="block text-sm font-medium text-gray-300 mb-1">Rol</label>
+            <select
+              id="rol"
+              value={rol}
+              onChange={(e) => setRol(e.target.value as UserRole)}
+              required
+              className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <option value="empleado">Empleado</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-500 focus:outline-none focus:border-gray-700 focus:ring ring-gray-300 disabled:opacity-25 transition ease-in-out duration-150"
               disabled={loading}
+              className="px-4 py-2 bg-gray-600 rounded-md hover:bg-gray-700 transition duration-150 disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="inline-flex justify-center items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-700 active:bg-primary-900 focus:outline-none focus:border-primary-900 focus:ring ring-primary-300 disabled:opacity-50 transition ease-in-out duration-150"
               disabled={loading}
+              className="px-4 py-2 bg-primary-600 rounded-md hover:bg-primary-700 transition duration-150 disabled:opacity-50 flex items-center justify-center min-w-[100px]"
             >
-              {loading ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              ) : (isEditing ? 'Guardar Cambios' : 'Crear Usuario')}
+              {loading ? <Spinner /> : 'Guardar'}
             </button>
           </div>
         </form>
