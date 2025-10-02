@@ -1,0 +1,5 @@
+{
+  "name": "Supabase Multi-Tenant Billing",
+  "description": "A multi-tenant billing and invoicing application built with React and Supabase. It features role-based access control, company isolation, and management of clients, products, and invoices.",
+  "requestFramePermissions": []
+}
