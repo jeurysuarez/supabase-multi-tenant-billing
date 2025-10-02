@@ -70,12 +70,12 @@ const CreateInvoicePage: React.FC = () => {
 
     const handleSaveInvoice = async () => {
         if (!selectedClientId || invoiceItems.length === 0 || !profile) {
-            alert('Please select a client and add at least one product.');
+            alert('Por favor, selecciona un cliente y añade al menos un producto.');
             return;
         }
         setLoading(true);
 
-        // 1. Create the invoice
+        // 1. Crear la factura
         const { data: facturaData, error: facturaError } = await supabase
             .from('facturas')
             .insert({
@@ -90,12 +90,12 @@ const CreateInvoicePage: React.FC = () => {
             .single();
 
         if (facturaError || !facturaData) {
-            alert('Error creating invoice: ' + facturaError?.message);
+            alert('Error al crear la factura: ' + facturaError?.message);
             setLoading(false);
             return;
         }
 
-        // 2. Add invoice details
+        // 2. Añadir los detalles de la factura
         const detalleFactura = invoiceItems.map(item => ({
             factura_id: facturaData.id,
             producto_id: item.producto_id,
@@ -107,14 +107,14 @@ const CreateInvoicePage: React.FC = () => {
         const { error: detalleError } = await supabase.from('detalle_factura').insert(detalleFactura);
 
         if (detalleError) {
-            alert('Error adding invoice details: ' + detalleError.message);
-            // Consider rolling back the invoice creation
+            alert('Error al añadir los detalles de la factura: ' + detalleError.message);
+            // Considerar revertir la creación de la factura
             setLoading(false);
             return;
         }
 
-        // 3. Update product stock
-        // This should ideally be a single transaction or an RPC call for atomicity
+        // 3. Actualizar el inventario de productos
+        // Idealmente, esto debería ser una sola transacción o una llamada RPC para atomicidad
         const stockUpdates = invoiceItems.map(item => 
             supabase.rpc('update_stock', {
                 product_id: item.producto_id,
@@ -124,7 +124,7 @@ const CreateInvoicePage: React.FC = () => {
         
         await Promise.all(stockUpdates);
         /*
-        Example SQL for update_stock RPC function:
+        Ejemplo SQL para la función RPC update_stock:
         CREATE OR REPLACE FUNCTION update_stock(product_id uuid, quantity_sold int)
         RETURNS void AS $$
         BEGIN
@@ -136,39 +136,39 @@ const CreateInvoicePage: React.FC = () => {
         */
 
         setLoading(false);
-        alert('Invoice created successfully!');
+        alert('¡Factura creada con éxito!');
         navigate('/invoices');
     };
 
 
     return (
         <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold text-white mb-6">Create New Invoice</h1>
+            <h1 className="text-3xl font-bold text-white mb-6">Crear Nueva Factura</h1>
             
             <div className="bg-gray-800 p-6 rounded-lg mb-6">
-                <label htmlFor="client-select" className="block text-sm font-medium text-gray-400 mb-2">Select a Client</label>
+                <label htmlFor="client-select" className="block text-sm font-medium text-gray-400 mb-2">Selecciona un Cliente</label>
                 <select 
                     id="client-select"
                     value={selectedClientId}
                     onChange={(e) => setSelectedClientId(e.target.value)}
                     className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2"
                 >
-                    <option value="" disabled>-- Choose a client --</option>
+                    <option value="" disabled>-- Elige un cliente --</option>
                     {clients.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                 </select>
             </div>
 
             <div className="bg-gray-800 p-6 rounded-lg mb-6">
-                <h2 className="text-xl font-semibold mb-4">Invoice Items</h2>
+                <h2 className="text-xl font-semibold mb-4">Artículos de la Factura</h2>
                 <div className="mb-4">
                     <select
                         onChange={(e) => handleAddProduct(e.target.value)}
                         className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2"
                         value=""
                     >
-                        <option value="" disabled>-- Add a product --</option>
+                        <option value="" disabled>-- Añade un producto --</option>
                         {products.filter(p => !invoiceItems.some(i => i.producto_id === p.id)).map(p => (
-                            <option key={p.id} value={p.id}>{p.nombre} (${p.precio}) - Stock: {p.stock}</option>
+                            <option key={p.id} value={p.id}>{p.nombre} (${p.precio}) - Inventario: {p.stock}</option>
                         ))}
                     </select>
                 </div>
@@ -209,7 +209,7 @@ const CreateInvoicePage: React.FC = () => {
                     disabled={loading}
                     className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-md disabled:bg-primary-800"
                 >
-                    {loading ? 'Saving...' : 'Save Invoice'}
+                    {loading ? 'Guardando...' : 'Guardar Factura'}
                 </button>
             </div>
         </div>

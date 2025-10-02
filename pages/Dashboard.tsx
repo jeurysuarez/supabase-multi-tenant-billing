@@ -51,28 +51,28 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-white mb-6">Welcome, {profile?.nombre}!</h1>
+      <h1 className="text-3xl font-bold text-white mb-6">¡Bienvenido, {profile?.nombre}!</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard title="Total Clients" value={loading ? '...' : stats.clients} icon={<UsersIcon className="h-8 w-8" />} />
-        <StatCard title="Total Products" value={loading ? '...' : stats.products} icon={<ArchiveBoxIcon className="h-8 w-8" />} />
-        <StatCard title="Total Invoices" value={loading ? '...' : stats.invoices} icon={<DocumentTextIcon className="h-8 w-8" />} />
+        <StatCard title="Total de Clientes" value={loading ? '...' : stats.clients} icon={<UsersIcon className="h-8 w-8" />} />
+        <StatCard title="Total de Productos" value={loading ? '...' : stats.products} icon={<ArchiveBoxIcon className="h-8 w-8" />} />
+        <StatCard title="Total de Facturas" value={loading ? '...' : stats.invoices} icon={<DocumentTextIcon className="h-8 w-8" />} />
       </div>
 
       <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
         <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
             <BuildingOffice2Icon className="h-6 w-6 mr-3 text-primary-400" />
-            Company Information
+            Información de la Empresa
         </h2>
         {profile?.empresa ? (
             <div className="space-y-3 text-gray-300">
-                <p><span className="font-semibold text-gray-400">Name:</span> {profile.empresa.nombre}</p>
+                <p><span className="font-semibold text-gray-400">Nombre:</span> {profile.empresa.nombre}</p>
                 <p><span className="font-semibold text-gray-400">RNC:</span> {profile.empresa.rnc || 'N/A'}</p>
-                <p><span className="font-semibold text-gray-400">Address:</span> {profile.empresa.direccion || 'N/A'}</p>
-                <p><span className="font-semibold text-gray-400">Phone:</span> {profile.empresa.telefono || 'N/A'}</p>
+                <p><span className="font-semibold text-gray-400">Dirección:</span> {profile.empresa.direccion || 'N/A'}</p>
+                <p><span className="font-semibold text-gray-400">Teléfono:</span> {profile.empresa.telefono || 'N/A'}</p>
             </div>
         ) : (
-            <p>Loading company information...</p>
+            <p>Cargando información de la empresa...</p>
         )}
       </div>
     </div>

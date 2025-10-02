@@ -1,5 +1,5 @@
 {
-  "name": "supabase-multi-tenant-billing",
+  "name": "supabase-facturación-multi-tenant",
   "private": true,
   "version": "0.0.0",
   "type": "module",

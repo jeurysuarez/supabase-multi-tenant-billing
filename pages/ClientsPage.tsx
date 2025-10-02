@@ -21,7 +21,7 @@ const ClientsPage: React.FC = () => {
             .eq('empresa_id', profile.empresa_id)
             .order('created_at', { ascending: false });
         if (error) {
-            console.error('Error fetching clients:', error);
+            console.error('Error al obtener clientes:', error);
         } else {
             setClients(data);
         }
@@ -71,8 +71,8 @@ const ClientsPage: React.FC = () => {
         }
 
         if (error) {
-            console.error('Error saving client:', error);
-            alert('Could not save client. ' + error.message);
+            console.error('Error al guardar cliente:', error);
+            alert('No se pudo guardar el cliente. ' + error.message);
         } else {
             fetchClients();
             handleCloseModal();
@@ -80,11 +80,11 @@ const ClientsPage: React.FC = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (window.confirm('Are you sure you want to delete this client?')) {
+        if (window.confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
             const { error } = await supabase.from('clientes').delete().eq('id', id);
             if (error) {
-                console.error('Error deleting client:', error);
-                alert('Could not delete client. ' + error.message);
+                console.error('Error al eliminar cliente:', error);
+                alert('No se pudo eliminar el cliente. ' + error.message);
             } else {
                 fetchClients();
             }
@@ -94,10 +94,10 @@ const ClientsPage: React.FC = () => {
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-white">Clients</h1>
+                <h1 className="text-3xl font-bold text-white">Clientes</h1>
                 <button onClick={() => handleOpenModal()} className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded-md flex items-center">
                     <PlusIcon className="h-5 w-5 mr-2" />
-                    Add Client
+                    Añadir Cliente
                 </button>
             </div>
 
@@ -106,16 +106,16 @@ const ClientsPage: React.FC = () => {
                     <table className="min-w-full text-white">
                         <thead className="bg-gray-700">
                             <tr>
-                                <th className="py-3 px-4 text-left">Name</th>
-                                <th className="py-3 px-4 text-left">Email</th>
-                                <th className="py-3 px-4 text-left">Phone</th>
+                                <th className="py-3 px-4 text-left">Nombre</th>
+                                <th className="py-3 px-4 text-left">Correo</th>
+                                <th className="py-3 px-4 text-left">Teléfono</th>
                                 <th className="py-3 px-4 text-left">RNC</th>
-                                <th className="py-3 px-4 text-center">Actions</th>
+                                <th className="py-3 px-4 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={5} className="text-center py-4">Loading...</td></tr>
+                                <tr><td colSpan={5} className="text-center py-4">Cargando...</td></tr>
                             ) : clients.map((client) => (
                                 <tr key={client.id} className="border-b border-gray-700 hover:bg-gray-700/50">
                                     <td className="py-3 px-4">{client.nombre}</td>
@@ -136,18 +136,18 @@ const ClientsPage: React.FC = () => {
             {showModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-gray-800 p-6 rounded-lg w-full max-w-md">
-                        <h2 className="text-2xl font-bold mb-4">{isEditing ? 'Edit Client' : 'Add Client'}</h2>
+                        <h2 className="text-2xl font-bold mb-4">{isEditing ? 'Editar Cliente' : 'Añadir Cliente'}</h2>
                         <form onSubmit={handleSubmit}>
                             <div className="mb-4">
-                                <label className="block text-gray-400 mb-1">Name</label>
+                                <label className="block text-gray-400 mb-1">Nombre</label>
                                 <input type="text" name="nombre" value={currentClient?.nombre || ''} onChange={handleChange} className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2" required />
                             </div>
                             <div className="mb-4">
-                                <label className="block text-gray-400 mb-1">Email</label>
+                                <label className="block text-gray-400 mb-1">Correo</label>
                                 <input type="email" name="email" value={currentClient?.email || ''} onChange={handleChange} className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2" />
                             </div>
                              <div className="mb-4">
-                                <label className="block text-gray-400 mb-1">Phone</label>
+                                <label className="block text-gray-400 mb-1">Teléfono</label>
                                 <input type="tel" name="telefono" value={currentClient?.telefono || ''} onChange={handleChange} className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2" />
                             </div>
                              <div className="mb-4">
@@ -155,12 +155,12 @@ const ClientsPage: React.FC = () => {
                                 <input type="text" name="rnc" value={currentClient?.rnc || ''} onChange={handleChange} className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2" />
                             </div>
                              <div className="mb-4">
-                                <label className="block text-gray-400 mb-1">Address</label>
+                                <label className="block text-gray-400 mb-1">Dirección</label>
                                 <input type="text" name="direccion" value={currentClient?.direccion || ''} onChange={handleChange} className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2" />
                             </div>
                             <div className="flex justify-end gap-4 mt-6">
-                                <button type="button" onClick={handleCloseModal} className="px-4 py-2 bg-gray-600 rounded-md">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-primary-600 hover:bg-primary-700 rounded-md">Save</button>
+                                <button type="button" onClick={handleCloseModal} className="px-4 py-2 bg-gray-600 rounded-md">Cancelar</button>
+                                <button type="submit" className="px-4 py-2 bg-primary-600 hover:bg-primary-700 rounded-md">Guardar</button>
                             </div>
                         </form>
                     </div>

@@ -18,7 +18,7 @@ const InvoiceDetailPage: React.FC = () => {
             .single();
 
         if (error) {
-            console.error('Error fetching invoice details:', error);
+            console.error('Error al obtener detalles de la factura:', error);
         } else {
             setInvoice(data as unknown as Factura);
         }
@@ -32,29 +32,29 @@ const InvoiceDetailPage: React.FC = () => {
     const getStatusChip = (status: string) => {
         switch (status) {
             case 'pagada':
-                return <span className="px-3 py-1 text-sm font-semibold text-green-800 bg-green-200 rounded-full">Paid</span>;
+                return <span className="px-3 py-1 text-sm font-semibold text-green-800 bg-green-200 rounded-full">Pagada</span>;
             case 'pendiente':
-                return <span className="px-3 py-1 text-sm font-semibold text-yellow-800 bg-yellow-200 rounded-full">Pending</span>;
+                return <span className="px-3 py-1 text-sm font-semibold text-yellow-800 bg-yellow-200 rounded-full">Pendiente</span>;
             case 'anulada':
-                return <span className="px-3 py-1 text-sm font-semibold text-red-800 bg-red-200 rounded-full">Annulled</span>;
+                return <span className="px-3 py-1 text-sm font-semibold text-red-800 bg-red-200 rounded-full">Anulada</span>;
             default:
-                return <span className="px-3 py-1 text-sm font-semibold text-gray-800 bg-gray-200 rounded-full">Unknown</span>;
+                return <span className="px-3 py-1 text-sm font-semibold text-gray-800 bg-gray-200 rounded-full">Desconocido</span>;
         }
     };
 
     if (loading) {
-        return <div className="text-center p-10">Loading invoice details...</div>;
+        return <div className="text-center p-10">Cargando detalles de la factura...</div>;
     }
 
     if (!invoice) {
-        return <div className="text-center p-10">Invoice not found.</div>;
+        return <div className="text-center p-10">Factura no encontrada.</div>;
     }
 
     return (
         <div className="max-w-4xl mx-auto bg-gray-800 p-8 rounded-lg shadow-lg">
             <div className="flex justify-between items-start mb-8">
                 <div>
-                    <h1 className="text-4xl font-bold text-white">Invoice</h1>
+                    <h1 className="text-4xl font-bold text-white">Factura</h1>
                     <p className="text-gray-400 font-mono">ID: {invoice.id}</p>
                 </div>
                 {getStatusChip(invoice.estado)}
@@ -62,16 +62,16 @@ const InvoiceDetailPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-8 mb-8 text-gray-300">
                 <div>
-                    <h2 className="text-lg font-semibold text-gray-400 mb-2">Billed To</h2>
+                    <h2 className="text-lg font-semibold text-gray-400 mb-2">Facturado a</h2>
                     <p className="font-bold text-white text-xl">{invoice.clientes.nombre}</p>
                     <p>{invoice.clientes.direccion}</p>
                     <p>{invoice.clientes.email}</p>
                     <p>{invoice.clientes.telefono}</p>
                 </div>
                 <div className="text-right">
-                     <h2 className="text-lg font-semibold text-gray-400 mb-2">Invoice Details</h2>
-                     <p><span className="font-semibold">Date:</span> {new Date(invoice.fecha).toLocaleDateString()}</p>
-                     <p><span className="font-semibold">Created By:</span> {invoice.usuarios.nombre}</p>
+                     <h2 className="text-lg font-semibold text-gray-400 mb-2">Detalles de la Factura</h2>
+                     <p><span className="font-semibold">Fecha:</span> {new Date(invoice.fecha).toLocaleDateString()}</p>
+                     <p><span className="font-semibold">Creado por:</span> {invoice.usuarios.nombre}</p>
                 </div>
             </div>
 
@@ -79,9 +79,9 @@ const InvoiceDetailPage: React.FC = () => {
                 <table className="min-w-full text-white">
                     <thead className="bg-gray-700">
                         <tr>
-                            <th className="py-3 px-4 text-left">Item</th>
-                            <th className="py-3 px-4 text-center">Quantity</th>
-                            <th className="py-3 px-4 text-right">Unit Price</th>
+                            <th className="py-3 px-4 text-left">Artículo</th>
+                            <th className="py-3 px-4 text-center">Cantidad</th>
+                            <th className="py-3 px-4 text-right">Precio Unitario</th>
                             <th className="py-3 px-4 text-right">Subtotal</th>
                         </tr>
                     </thead>

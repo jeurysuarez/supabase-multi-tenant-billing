@@ -13,30 +13,30 @@ const Sidebar: React.FC = () => {
   return (
     <div className="flex flex-col w-64 bg-gray-900 border-r border-gray-700">
       <div className="flex items-center justify-center h-16 border-b border-gray-700">
-        <span className="text-white text-2xl font-bold">BillingCo</span>
+        <span className="text-white text-2xl font-bold">FacturaPro</span>
       </div>
       <div className="flex flex-col flex-1 overflow-y-auto p-4">
         <nav>
           <NavLink to="/" className={({ isActive }) => `${commonClasses} ${isActive ? activeClasses : ''}`}>
             <HomeIcon className="h-6 w-6 mr-3" />
-            Dashboard
+            Panel
           </NavLink>
           <NavLink to="/invoices" className={({ isActive }) => `${commonClasses} ${isActive ? activeClasses : ''}`}>
             <DocumentTextIcon className="h-6 w-6 mr-3" />
-            Invoices
+            Facturas
           </NavLink>
           <NavLink to="/clients" className={({ isActive }) => `${commonClasses} ${isActive ? activeClasses : ''}`}>
             <ShoppingCartIcon className="h-6 w-6 mr-3" />
-            Clients
+            Clientes
           </NavLink>
           <NavLink to="/products" className={({ isActive }) => `${commonClasses} ${isActive ? activeClasses : ''}`}>
             <ArchiveBoxIcon className="h-6 w-6 mr-3" />
-            Products
+            Productos
           </NavLink>
           {profile?.rol === UserRole.ADMIN && (
             <NavLink to="/users" className={({ isActive }) => `${commonClasses} ${isActive ? activeClasses : ''}`}>
               <UsersIcon className="h-6 w-6 mr-3" />
-              Users
+              Usuarios
             </NavLink>
           )}
         </nav>

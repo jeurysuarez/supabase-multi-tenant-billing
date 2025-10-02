@@ -44,22 +44,22 @@ const AuthPage: React.FC = () => {
     }
 
     if (signUpData.user) {
-        // NOTE: In a production environment, you should create a Supabase Database Function (RPC)
-        // to securely handle the creation of a new company and user profile.
-        // This prevents clients from inserting arbitrary data.
-        // Example SQL for the RPC function `create_company_and_admin_profile`:
+        // NOTA: En un entorno de producción, deberías crear una Función de Base de Datos de Supabase (RPC)
+        // para manejar de forma segura la creación de una nueva empresa y perfil de usuario.
+        // Esto evita que los clientes inserten datos arbitrarios.
+        // Ejemplo SQL para la función RPC `create_company_and_admin_profile`:
         /*
         CREATE OR REPLACE FUNCTION create_company_and_admin_profile(user_id uuid, user_name text, company_name text)
         RETURNS void AS $$
         DECLARE
           new_empresa_id uuid;
         BEGIN
-          -- Create the company
+          -- Crear la empresa
           INSERT INTO public.empresas (nombre)
           VALUES (company_name)
           RETURNING id INTO new_empresa_id;
 
-          -- Create the user profile linked to the new company
+          -- Crear el perfil de usuario vinculado a la nueva empresa
           INSERT INTO public.usuarios (id, nombre, empresa_id, rol)
           VALUES (user_id, user_name, new_empresa_id, 'admin');
         END;
@@ -72,9 +72,9 @@ const AuthPage: React.FC = () => {
       });
 
       if (rpcError) {
-        setError(`Registration failed: ${rpcError.message}. Please contact support.`);
+        setError(`Registro fallido: ${rpcError.message}. Por favor, contacta a soporte.`);
       } else {
-        setMessage('Success! Please check your email to confirm your registration.');
+        setMessage('¡Éxito! Por favor, revisa tu correo electrónico para confirmar tu registro.');
       }
     }
     
@@ -85,7 +85,7 @@ const AuthPage: React.FC = () => {
     <div className="min-h-screen bg-gray-900 flex items-center justify-center">
       <div className="max-w-md w-full bg-gray-800 p-8 rounded-lg shadow-lg">
         <h2 className="text-3xl font-bold text-center text-white mb-6">
-          {isLogin ? 'Welcome Back' : 'Create Account'}
+          {isLogin ? 'Bienvenido de Nuevo' : 'Crear Cuenta'}
         </h2>
         
         {error && <p className="bg-red-500/20 text-red-400 p-3 rounded-md mb-4">{error}</p>}
@@ -95,7 +95,7 @@ const AuthPage: React.FC = () => {
           {!isLogin && (
             <>
               <div className="mb-4">
-                <label className="block text-gray-400 mb-2" htmlFor="nombre">Full Name</label>
+                <label className="block text-gray-400 mb-2" htmlFor="nombre">Nombre Completo</label>
                 <input
                   type="text"
                   id="nombre"
@@ -106,7 +106,7 @@ const AuthPage: React.FC = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-400 mb-2" htmlFor="nombreEmpresa">Company Name</label>
+                <label className="block text-gray-400 mb-2" htmlFor="nombreEmpresa">Nombre de la Empresa</label>
                 <input
                   type="text"
                   id="nombreEmpresa"
@@ -119,7 +119,7 @@ const AuthPage: React.FC = () => {
             </>
           )}
           <div className="mb-4">
-            <label className="block text-gray-400 mb-2" htmlFor="email">Email</label>
+            <label className="block text-gray-400 mb-2" htmlFor="email">Correo Electrónico</label>
             <input
               type="email"
               id="email"
@@ -130,7 +130,7 @@ const AuthPage: React.FC = () => {
             />
           </div>
           <div className="mb-6">
-            <label className="block text-gray-400 mb-2" htmlFor="password">Password</label>
+            <label className="block text-gray-400 mb-2" htmlFor="password">Contraseña</label>
             <input
               type="password"
               id="password"
@@ -145,13 +145,13 @@ const AuthPage: React.FC = () => {
             disabled={loading}
             className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 flex items-center justify-center disabled:bg-primary-800"
           >
-            {loading ? <Spinner /> : (isLogin ? 'Login' : 'Sign Up')}
+            {loading ? <Spinner /> : (isLogin ? 'Iniciar Sesión' : 'Registrarse')}
           </button>
         </form>
         <p className="text-center text-gray-400 mt-6">
-          {isLogin ? "Don't have an account?" : 'Already have an account?'}
+          {isLogin ? "¿No tienes una cuenta?" : '¿Ya tienes una cuenta?'}
           <button onClick={() => setIsLogin(!isLogin)} className="text-primary-400 hover:underline ml-2 font-semibold">
-            {isLogin ? 'Sign Up' : 'Login'}
+            {isLogin ? 'Regístrate' : 'Inicia Sesión'}
           </button>
         </p>
       </div>

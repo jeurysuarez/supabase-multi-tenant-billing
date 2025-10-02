@@ -21,7 +21,7 @@ const InvoicesPage: React.FC = () => {
             .order('fecha', { ascending: false });
 
         if (error) {
-            console.error('Error fetching invoices:', error);
+            console.error('Error al obtener facturas:', error);
         } else {
             setInvoices(data as unknown as Factura[]);
         }
@@ -35,23 +35,23 @@ const InvoicesPage: React.FC = () => {
     const getStatusChip = (status: string) => {
         switch (status) {
             case 'pagada':
-                return <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full">Paid</span>;
+                return <span className="px-2 py-1 text-xs font-semibold text-green-800 bg-green-200 rounded-full">Pagada</span>;
             case 'pendiente':
-                return <span className="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">Pending</span>;
+                return <span className="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-200 rounded-full">Pendiente</span>;
             case 'anulada':
-                return <span className="px-2 py-1 text-xs font-semibold text-red-800 bg-red-200 rounded-full">Annulled</span>;
+                return <span className="px-2 py-1 text-xs font-semibold text-red-800 bg-red-200 rounded-full">Anulada</span>;
             default:
-                return <span className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded-full">Unknown</span>;
+                return <span className="px-2 py-1 text-xs font-semibold text-gray-800 bg-gray-200 rounded-full">Desconocido</span>;
         }
     };
 
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold text-white">Invoices</h1>
+                <h1 className="text-3xl font-bold text-white">Facturas</h1>
                 <button onClick={() => navigate('/invoices/new')} className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded-md flex items-center">
                     <PlusIcon className="h-5 w-5 mr-2" />
-                    New Invoice
+                    Nueva Factura
                 </button>
             </div>
              <div className="bg-gray-800 shadow-lg rounded-lg overflow-hidden">
@@ -59,17 +59,17 @@ const InvoicesPage: React.FC = () => {
                     <table className="min-w-full text-white">
                         <thead className="bg-gray-700">
                             <tr>
-                                <th className="py-3 px-4 text-left">Invoice ID</th>
-                                <th className="py-3 px-4 text-left">Client</th>
-                                <th className="py-3 px-4 text-left">Date</th>
+                                <th className="py-3 px-4 text-left">ID Factura</th>
+                                <th className="py-3 px-4 text-left">Cliente</th>
+                                <th className="py-3 px-4 text-left">Fecha</th>
                                 <th className="py-3 px-4 text-right">Total</th>
-                                <th className="py-3 px-4 text-center">Status</th>
-                                <th className="py-3 px-4 text-center">Actions</th>
+                                <th className="py-3 px-4 text-center">Estado</th>
+                                <th className="py-3 px-4 text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan={6} className="text-center py-4">Loading invoices...</td></tr>
+                                <tr><td colSpan={6} className="text-center py-4">Cargando facturas...</td></tr>
                             ) : invoices.map((invoice) => (
                                 <tr key={invoice.id} className="border-b border-gray-700 hover:bg-gray-700/50">
                                     <td className="py-3 px-4 font-mono text-sm">...{invoice.id.slice(-8)}</td>

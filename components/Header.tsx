@@ -12,6 +12,12 @@ const Header: React.FC = () => {
     navigate('/auth');
   };
 
+  const displayRol = (rol: string | undefined) => {
+    if (rol === 'admin') return 'Administrador';
+    if (rol === 'empleado') return 'Empleado';
+    return rol;
+  }
+
   return (
     <header className="flex items-center justify-between h-16 px-6 bg-gray-900 border-b border-gray-700">
       <div>
@@ -20,12 +26,12 @@ const Header: React.FC = () => {
       <div className="flex items-center">
         <div className="text-right mr-4">
           <p className="text-sm font-medium text-white">{profile?.nombre}</p>
-          <p className="text-xs text-gray-400 capitalize">{profile?.rol}</p>
+          <p className="text-xs text-gray-400 capitalize">{displayRol(profile?.rol)}</p>
         </div>
         <button
           onClick={handleLogout}
           className="p-2 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-          aria-label="Logout"
+          aria-label="Cerrar sesión"
         >
           <ArrowRightOnRectangleIcon className="h-6 w-6" />
         </button>
