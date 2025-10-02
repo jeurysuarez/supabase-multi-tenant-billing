@@ -1,126 +1,87 @@
-
-import React, { useState, FormEvent, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../hooks/useAuth';
-import Spinner from '../components/Spinner';
 
 const AuthPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
   const navigate = useNavigate();
-  const { session, loading: authLoading } = useAuth();
+  const { session } = useAuth();
 
   useEffect(() => {
-    // If user is already logged in, redirect to dashboard
-    if (session && !authLoading) {
-      navigate('/');
+    if (session) {
+      navigate('/', { replace: true });
     }
-  }, [session, authLoading, navigate]);
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (signInError) throw signInError;
-      // onAuthStateChange in AuthContext will pick up the new session.
-      // The useEffect above will then handle the redirect.
-      // We can also navigate imperatively here.
-      navigate('/');
-    } catch (err: any) {
-      setError(err.message || 'Correo o contraseña incorrectos.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Show a loading screen while checking for an existing session.
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-900">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-primary-500"></div>
-      </div>
-    );
-  }
-
-  // If already logged in (session is not null), don't render the form.
-  // The useEffect will handle redirection, but this prevents a flash of content.
-  if (session) {
-      return null;
-  }
+  }, [session, navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h1 className="mt-6 text-center text-4xl font-extrabold text-white tracking-tight">
-          FacturaPro
-        </h1>
-        <h2 className="mt-2 text-center text-xl text-gray-400">
-          Inicia sesión en tu cuenta
-        </h2>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300">
-                Correo Electrónico
-              </label>
-              <div className="mt-1">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-gray-700 text-white"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                Contraseña
-              </label>
-              <div className="mt-1">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm bg-gray-700 text-white"
-                />
-              </div>
-            </div>
-
-            {error && <p className="text-sm text-red-500 text-center">{error}</p>}
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-primary-500 disabled:bg-primary-800 disabled:cursor-not-allowed"
-              >
-                {loading ? <Spinner /> : 'Iniciar Sesión'}
-              </button>
-            </div>
-          </form>
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-md p-8 space-y-6 bg-gray-800 rounded-lg shadow-xl">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-white">
+            FacturaPro
+          </h1>
+          <p className="mt-2 text-sm text-gray-400">
+            Bienvenido. Inicia sesión para acceder a tu cuenta.
+          </p>
         </div>
+        
+        <Auth
+          supabaseClient={supabase}
+          appearance={{ 
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#8B5CF6',
+                  brandAccent: '#7C3AED',
+                  brandButtonText: 'white',
+                  defaultButtonBackground: '#374151',
+                  defaultButtonBackgroundHover: '#4B5563',
+                  defaultButtonBorder: 'rgb(63, 63, 70)',
+                  defaultButtonText: 'white',
+                  dividerBackground: '#4B5563',
+                  inputBackground: '#1F2937',
+                  inputBorder: '#4B5563',
+                  inputBorderHover: '#6B7280',
+                  inputBorderFocus: '#8B5CF6',
+                  inputText: 'white',
+                  inputLabelText: '#D1D5DB',
+                  inputPlaceholder: '#6B7280',
+                  messageText: '#9CA3AF',
+                  messageTextDanger: '#F87171',
+                  anchorTextColor: '#A78BFA',
+                  anchorTextColorHover: '#C4B5FD',
+                }
+              }
+            }
+          }}
+          view="sign_in" // Only show sign in form. No public sign up.
+          showLinks={true} // Shows forgot password link
+          providers={[]} // No social providers
+          localization={{
+            variables: {
+              sign_in: {
+                email_label: 'Correo Electrónico',
+                password_label: 'Contraseña',
+                email_input_placeholder: 'tu.email@ejemplo.com',
+                password_input_placeholder: 'Tu contraseña',
+                button_label: 'Iniciar Sesión',
+                loading_button_label: 'Iniciando sesión...',
+                link_text: undefined, // Hides the "Don't have an account? Sign up" link
+              },
+              forgotten_password: {
+                email_label: 'Correo Electrónico',
+                email_input_placeholder: 'tu.email@ejemplo.com',
+                button_label: 'Enviar instrucciones de recuperación',
+                loading_button_label: 'Enviando...',
+                link_text: '¿Olvidaste tu contraseña?',
+                confirmation_text: 'Revisa tu correo para el enlace de recuperación de contraseña.'
+              },
+            },
+          }}
+        />
       </div>
     </div>
   );
