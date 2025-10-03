@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../hooks/useAuth';
@@ -6,6 +5,70 @@ import { Usuario } from '../types';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import UserModal from '../components/UserModal';
 import Spinner from '../components/Spinner';
+
+/*
+  ============================================================================
+  IMPORTANTE: Para que la creación de nuevos usuarios funcione,
+  debes ejecutar el siguiente código SQL en tu editor de Supabase.
+  Esta función se encarga de crear el usuario de forma segura en un
+  único paso, manejando tanto la autenticación como el perfil.
+
+  Ve a Supabase -> SQL Editor -> New query y pega lo siguiente:
+  ============================================================================
+  
+  CREATE OR REPLACE FUNCTION public.admin_create_user(
+      email_input text,
+      password_input text,
+      nombre_input text,
+      rol_input text,
+      empresa_id_input uuid
+  )
+  RETURNS void
+  LANGUAGE plpgsql
+  SECURITY DEFINER
+  -- Establecer search_path es una buena práctica de seguridad.
+  SET search_path = public
+  AS $$
+  DECLARE
+    new_user_id uuid;
+  BEGIN
+    -- 1. Crear el usuario en el sistema de autenticación de Supabase (auth.users).
+    --    Usamos crypt() para hashear la contraseña. El usuario se crea ya confirmado.
+    INSERT INTO auth.users (
+      instance_id,
+      id,
+      aud,
+      role,
+      email,
+      encrypted_password,
+      email_confirmed_at,
+      created_at,
+      updated_at,
+      raw_user_meta_data
+    ) values (
+      auth.instance_id(), -- Usa la función correcta para el ID de instancia.
+      gen_random_uuid(),
+      'authenticated',
+      'authenticated',
+      email_input,
+      crypt(password_input, gen_salt('bf')), -- Encripta la contraseña
+      now(), -- Confirma el email inmediatamente
+      now(),
+      now(),
+      jsonb_build_object('nombre', nombre_input)
+    ) RETURNING id INTO new_user_id;
+
+    -- 2. Crear el perfil del usuario en la tabla 'public.usuarios'.
+    INSERT INTO public.usuarios (id, empresa_id, nombre, email, rol)
+    VALUES (new_user_id, empresa_id_input, nombre_input, email_input, rol_input);
+
+  END;
+  $$;
+
+  COMMENT ON FUNCTION public.admin_create_user(text, text, text, text, uuid)
+  IS 'Crea un nuevo usuario de autenticación y su perfil de usuario asociado. Diseñado para ser llamado por un administrador.';
+
+*/
 
 const UsersPage: React.FC = () => {
     const { profile } = useAuth();
