@@ -13,12 +13,16 @@ import Spinner from '../components/Spinner';
 
   Ve a Supabase -> SQL Editor -> New query y pega lo siguiente:
   ============================================================================
+  
+  -- CORRECCIÓN: Los parámetros se han reordenado alfabéticamente para
+  -- coincidir con la forma en que la API de Supabase (PostgREST) los interpreta,
+  -- solucionando el error "Could not find function in schema cache".
 
   CREATE OR REPLACE FUNCTION public.create_company_and_admin_profile(
       company_name text,
+      user_email text,
       user_id uuid,
-      user_name text,
-      user_email text
+      user_name text
   )
   RETURNS void
   LANGUAGE plpgsql
