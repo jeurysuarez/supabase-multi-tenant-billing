@@ -11,6 +11,25 @@ interface UserModalProps {
   user: Usuario | null;
 }
 
+// Helper to translate Supabase errors into user-friendly messages
+const getFriendlyErrorMessage = (error: any): string => {
+  const message = error.message || 'Ocurrió un error inesperado.';
+  if (message.includes('violates unique constraint "users_email_key"') || message.includes('duplicate key value violates unique constraint "users_email_key"')) {
+    return "Este correo electrónico ya está registrado. Por favor, utiliza otro.";
+  }
+  if (message.includes('violates unique constraint "usuarios_email_key"')) {
+    return "Este correo electrónico ya está en uso por otro perfil de usuario.";
+  }
+  if (message.includes('function public.admin_create_user does not exist')) {
+    return "Error de configuración: La función para crear usuarios no se encuentra en la base de datos. Por favor, ejecuta el script SQL proporcionado por el soporte.";
+  }
+  if (message.includes('check constraint')) {
+    return 'Uno de los campos tiene un valor no permitido (ej: rol inválido).';
+  }
+  return `Error: ${message}. Revisa la consola para más detalles.`;
+};
+
+
 const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) => {
   const { profile } = useAuth();
   const [nombre, setNombre] = useState('');
@@ -57,18 +76,13 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
         
       } else {
         // Create a new user.
-        if (!password) {
-          throw new Error("La contraseña es obligatoria para nuevos usuarios.");
+        if (!password || password.length < 6) {
+          throw new Error("La contraseña es obligatoria y debe tener al menos 6 caracteres.");
         }
         if (!profile?.empresa_id) {
           throw new Error("No se pudo determinar la empresa del administrador.");
         }
 
-        // WARNING: This is a simplified approach for demonstration.
-        // A production-ready implementation should use a Supabase Edge Function
-        // to securely create a user in `auth.users` and their profile in `public.usuarios`.
-        // We are calling a hypothetical RPC function `admin_create_user` here.
-        // You would need to create this function in your Supabase SQL editor.
         const { error: rpcError } = await supabase.rpc('admin_create_user', {
             email_input: email,
             password_input: password,
@@ -77,14 +91,12 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
             empresa_id_input: profile.empresa_id,
         });
 
-        if (rpcError) {
-            throw new Error(`Error al crear usuario: ${rpcError.message}. Asegúrate de que la función 'admin_create_user' existe y funciona correctamente.`);
-        }
+        if (rpcError) throw rpcError;
       }
       onSave();
     } catch (err: any) {
-      console.error(err);
-      setError(err.message);
+      console.error("Error creating/updating user:", err);
+      setError(getFriendlyErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -109,7 +121,7 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
         </div>
         
         <form onSubmit={handleSubmit}>
-          {error && <p className="bg-red-900/50 text-red-300 p-3 rounded-md mb-4 text-sm">{error}</p>}
+          {error && <p className="bg-red-900/50 text-red-300 p-3 rounded-md mb-4 text-sm whitespace-pre-wrap">{error}</p>}
           
           <div className="mb-4">
             <label htmlFor="nombre" className="block text-sm font-medium text-gray-300 mb-1">Nombre Completo</label>
@@ -145,6 +157,7 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required={!isEditing}
+                minLength={6}
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
