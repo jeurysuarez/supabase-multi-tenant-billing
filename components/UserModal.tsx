@@ -14,14 +14,17 @@ interface UserModalProps {
 // Helper to translate Supabase errors into user-friendly messages
 const getFriendlyErrorMessage = (error: any): string => {
   const message = error.message || 'Ocurrió un error inesperado.';
-  if (message.includes('User already registered')) {
-    return "Este correo electrónico ya está registrado en el sistema de autenticación. Por favor, utiliza otro.";
+  if (message.includes('duplicate key value violates unique constraint "users_email_key"')) {
+    return "Este correo electrónico ya está registrado. Por favor, utiliza otro.";
   }
-  if (message.includes('violates unique constraint "usuarios_email_key"')) {
+  if (message.includes('duplicate key value violates unique constraint "usuarios_email_key"')) {
     return "Este correo electrónico ya está en uso por otro perfil de usuario.";
   }
+   if (message.includes('Password should be at least 6 characters')) {
+    return "La contraseña debe tener al menos 6 caracteres.";
+  }
   if (message.includes('function public.admin_create_user does not exist')) {
-    return "Error de configuración: La función para crear usuarios no se encuentra en la base de datos. Por favor, ejecuta el script SQL proporcionado por el soporte.";
+    return "Error de configuración: La función para crear usuarios no se encuentra en la base de datos. Por favor, ejecuta el script SQL proporcionado.";
   }
   return `Error: ${message}. Revisa la consola para más detalles.`;
 };
@@ -72,8 +75,8 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
         if (updateError) throw updateError;
         
       } else {
-        // --- ADAPTED TO NEW SQL SCRIPT ---
-        // This is a 2-step process as per the new database function
+        // --- NEW SIMPLIFIED LOGIC ---
+        // Call a single, robust RPC function to handle user creation securely.
         
         if (!password || password.length < 6) {
           throw new Error("La contraseña es obligatoria y debe tener al menos 6 caracteres.");
@@ -82,30 +85,15 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSave, user }) 
           throw new Error("No se pudo determinar la empresa del administrador.");
         }
 
-        // Step 1: Create the user in auth.users
-        const { data: authData, error: signUpError } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-        });
-
-        if (signUpError) throw signUpError;
-        if (!authData.user) throw new Error("No se pudo crear el usuario de autenticación.");
-
-        // Step 2: Call the RPC function to create the user profile in public.usuarios
         const { error: rpcError } = await supabase.rpc('admin_create_user', {
-            user_id_input: authData.user.id,
-            empresa_id_input: profile.empresa_id,
-            nombre_input: nombre,
             email_input: email,
-            rol_input: rol
+            password_input: password,
+            nombre_input: nombre,
+            rol_input: rol,
+            empresa_id_input: profile.empresa_id
         });
 
-        if (rpcError) {
-          // If the profile creation fails, we should ideally delete the auth user to avoid orphans.
-          // This requires another admin-privileged function. For now, we'll just show the error.
-          console.error("Auth user was created, but profile creation failed:", rpcError);
-          throw new Error(`El usuario de autenticación se creó, pero falló la creación del perfil: ${rpcError.message}`);
-        }
+        if (rpcError) throw rpcError;
       }
       onSave();
     } catch (err: any) {
